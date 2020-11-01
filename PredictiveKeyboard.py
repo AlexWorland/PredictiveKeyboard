@@ -29,7 +29,7 @@ def main():
     optimizer = RMSprop(lr=0.01)
 
     # path = str(input("Please enter the file path of the input dataset: "))
-    path = 'homes.txt'
+    path = 'holmes.txt'
     data = getDataset(path)
     uniqueWords = np.unique(data)
     uniqueWordsIndex = dict((c, i) for i, c in enumerate(uniqueWords))
@@ -43,7 +43,7 @@ def main():
 
     model = compileModel(model, optimizer)
 
-    model, history = trainModel(model, X, Y)
+    model, history = trainModel(model, X, Y, epochs)
 
     saveModel(model, history)
 
@@ -123,7 +123,7 @@ def compileModel(model, optimizer):
     return model
 
 
-def trainModel(model, X, Y):
+def trainModel(model, X, Y, epochs):
     history = model.fit(X, Y, validation_split=0.05, batch_size=128, epochs=epochs, shuffle=True).history
     return model, history
 
