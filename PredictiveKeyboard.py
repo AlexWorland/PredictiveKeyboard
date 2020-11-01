@@ -53,16 +53,15 @@ def main():
         print(len(suggestions) + 1, ": End Sentence")
         print(len(suggestions) + 2, ": Enter custom word")
         choice = int(input("Please enter number: "))
-        if choice == len(suggestions) + 1:
+        if choice == len(suggestions):
             createdText = createdText + ". "
             temp = createdText
             createdText = ""
             createdText = " " + str(input("Please enter the start of the new sentence: "))
-        elif choice == len(suggestions) + 2:
+        elif choice == len(suggestions) + 1:
             createdText = createdText + str(input("Enter Word: "))
-        elif choice > len(suggestions) + 2 or choice < -1:
+        elif choice > len(suggestions) + 1 or choice < -1:
             print("Please enter a number between ", -1, "and", len(suggestions)+2)
-            continue
         else:
             createdText = createdText + " " + suggestions[choice]
 
@@ -86,7 +85,7 @@ def saveModelPrompt(model, history):
 
 def prepareWords(fileName, numPrevWords):
     # path = str(input("Please enter the file path of the input dataset: "))
-    path = 'Danger.txt'
+    path = 'holmes.txt'
     data = getDataset(path)
     uniqueWords = np.unique(data)
     uniqueWordsIndex = dict((c, i) for i, c in enumerate(uniqueWords))
@@ -213,10 +212,12 @@ def predictCompletions(text, model, uniqueWords, uniqueWordsIndex, numPreviousWo
 
 
 if __name__ == '__main__':
-    import os
-
-    os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
+    # import os
+    #
+    # os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
     import tensorflow as tf
+    gpus = tf.config.experimental.list_physical_devices('GPU')
+    for gpu in gpus:
+        print("Name:", gpu.name, "  Type:", gpu.device_type)
 
-    with tf.device("/device:cpu:0"):
-        main()
+
