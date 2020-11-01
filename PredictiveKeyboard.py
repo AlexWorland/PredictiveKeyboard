@@ -37,6 +37,7 @@ def main():
         historylPath = input("What is the file path for the model history you wish to load? : ")
         model, history = loadModel(modelPath, historylPath)
     else:
+        epochs = int(input("How many epochs would you like to train for? : "))
         model, history, uniqueWords, uniqueWordsIndex = createNewModel(numPrevWords, optimizer, epochs)
         saveModelPrompt(model, history)
 
