@@ -25,36 +25,41 @@ def main():
     numSuggestions = 5
     # TODO: make user specifiable
     numPrevWords = 5
-    epochs = 20
+    epochs = 200
     optimizer = RMSprop(lr=0.01)
+    createdText = ""
 
-    # path = str(input("Please enter the file path of the input dataset: "))
-    path = 'holmes.txt'
-    data = getDataset(path)
-    uniqueWords = np.unique(data)
-    uniqueWordsIndex = dict((c, i) for i, c in enumerate(uniqueWords))
+    uniqueWords, uniqueWordsIndex, prevWords, nextWords = prepareWords("", numPrevWords)
 
-    previousWords = preparePrevWords(data, numPrevWords)
-    nextWords = prepareNextWords(data, numPrevWords)
+    # Would you like to load an existing model?
+    if input("Would you like to load an existing model? (y/n): ") == 'y':
+        modelPath = input("What is the file path for the model you wish to load? : ")
+        historylPath = input("What is the file path for the model history you wish to load? : ")
+        model, history = loadModel(modelPath, historylPath)
+    else:
+        model, history, uniqueWords, uniqueWordsIndex = createNewModel(numPrevWords, optimizer, epochs)
+        saveModelPrompt(model, history)
 
-    X, Y = prepareXYDatasets(previousWords, nextWords, numPrevWords, uniqueWords, uniqueWordsIndex)
+    createdText = str(input("Please enter the first word: "))
+    choice = 0
+    while choice != -1:
+        print(createdText)
+        suggestions = predictCompletions(createdText, model, uniqueWords, uniqueWordsIndex, numPrevWords,
+                                         numSuggestions)
+        print("Select one of the following (enter -1 to finish): ")
+        for i in range(len(suggestions)):
+            print(i, ":", suggestions[i])
+        choice = int(input("Please enter "))
+        createdText = createdText + " " + suggestions[choice]
 
-    model = prepareModel(numPrevWords, uniqueWords)
+    # model, history = loadModel('kerasNextWordModel.h5', 'history.p')
 
-    model = compileModel(model, optimizer)
-
-    model, history = trainModel(model, X, Y, epochs)
-
-    saveModel(model, history)
-
-    model, history = loadModel('kerasNextWordModel.h5', 'history.p')
-
-    q = "Your life will never be the same again."
-    print("Correct Sentence: ", q)
-    seq = " ".join(RegexpTokenizer(r'\w+').tokenize(q.lower())[0:numPrevWords])
-    print("Sequence: ", seq)
-    print("next possible words: ",
-          predictCompletions(seq, model, uniqueWords, uniqueWordsIndex, numPrevWords, numSuggestions))
+    # q = "Your life will never be the same again."
+    # print("Correct Sentence: ", q)
+    # seq = " ".join(RegexpTokenizer(r'\w+').tokenize(q.lower())[0:numPrevWords])
+    # print("Sequence: ", seq)
+    # print("next possible words: ",
+    #       predictCompletions(seq, model, uniqueWords, uniqueWordsIndex, numPrevWords, numSuggestions))
 
 
 def getDataset(path):
@@ -65,6 +70,38 @@ def getDataset(path):
     text = open(path, encoding='utf8').read().lower()
     print('corpus length: ', len(text))
     return splitDataset(text)
+
+
+def saveModelPrompt(model, history):
+    if input("Would you like to save the current model? (y/n): ") == 'y':
+        fileName = input("What would you like to name the model file?")
+        historyName = input("What would you like to name the history file?")
+        saveModel(model, history, fileName, historyName)
+
+
+def prepareWords(fileName, numPrevWords):
+    # path = str(input("Please enter the file path of the input dataset: "))
+    path = 'holmes.txt'
+    data = getDataset(path)
+    uniqueWords = np.unique(data)
+    uniqueWordsIndex = dict((c, i) for i, c in enumerate(uniqueWords))
+    previousWords = preparePrevWords(data, numPrevWords)
+    nextWords = prepareNextWords(data, numPrevWords)
+    return uniqueWords, uniqueWordsIndex, previousWords, nextWords
+
+
+def createNewModel(numPrevWords, optimizer, epochs):
+    # path = str(input("Please enter the file path of the input dataset: "))
+    uniqueWords, uniqueWordsIndex, previousWords, nextWords = prepareWords("", numPrevWords)
+
+    X, Y = prepareXYDatasets(previousWords, nextWords, numPrevWords, uniqueWords, uniqueWordsIndex)
+
+    model = prepareModel(numPrevWords, uniqueWords)
+
+    model = compileModel(model, optimizer)
+
+    model, history = trainModel(model, X, Y, epochs)
+    return model, history, uniqueWords, uniqueWordsIndex
 
 
 def splitDataset(text):
@@ -112,9 +149,23 @@ def prepareModel(numPrevWords, uniqueWords):
 
 def prepareInput(text, numPreviousWords, uniqueWords, uniqueWordsIndex):
     X = np.zeros((1, numPreviousWords, len(uniqueWords)))
-    for t, word in enumerate(text.split()):
-        print(word)
-        X[0, t, uniqueWordsIndex[word]] = 1
+
+    words = []
+    for word in text.split():
+        words.append(word)
+    words.reverse()
+    tmpText = ""
+    for word in words:
+        tmpText += word + " "
+
+    counter = 4
+
+    for t, word in enumerate(tmpText.split()):
+        if counter < 0:
+            break
+        # print(word)
+        X[0, counter, uniqueWordsIndex[word]] = 1
+        counter -= 1
     return X
 
 
@@ -128,9 +179,9 @@ def trainModel(model, X, Y, epochs):
     return model, history
 
 
-def saveModel(model, history):
-    model.save('kerasNextWordModel.h5')
-    pickle.dump(history, open("history.p", "wb"))
+def saveModel(model, history, fileName, historyName):
+    model.save(fileName)
+    pickle.dump(history, open(historyName, "wb"))
 
 
 def loadModel(modelPath, historyPath):
@@ -154,6 +205,7 @@ def predictCompletions(text, model, uniqueWords, uniqueWordsIndex, numPreviousWo
     preds = model.predict(x, verbose=0)[0]
     next_indicies = sample(preds, n)
     return [uniqueWords[idx] for idx in next_indicies]
+
 
 if __name__ == '__main__':
     import os
