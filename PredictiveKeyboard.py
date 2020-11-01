@@ -25,7 +25,7 @@ def main():
     numSuggestions = 5
     # TODO: make user specifiable
     numPrevWords = 5
-    epochs = 200
+    epochs = 20
     optimizer = RMSprop(lr=0.01)
     createdText = ""
 
@@ -42,24 +42,29 @@ def main():
 
     createdText = str(input("Please enter the first word: "))
     choice = 0
+    temp = ""
     while choice != -1:
-        print(createdText)
+        print(temp + createdText)
         suggestions = predictCompletions(createdText, model, uniqueWords, uniqueWordsIndex, numPrevWords,
                                          numSuggestions)
         print("Select one of the following (enter -1 to finish): ")
         for i in range(len(suggestions)):
             print(i, ":", suggestions[i])
-        choice = int(input("Please enter "))
-        createdText = createdText + " " + suggestions[choice]
-
-    # model, history = loadModel('kerasNextWordModel.h5', 'history.p')
-
-    # q = "Your life will never be the same again."
-    # print("Correct Sentence: ", q)
-    # seq = " ".join(RegexpTokenizer(r'\w+').tokenize(q.lower())[0:numPrevWords])
-    # print("Sequence: ", seq)
-    # print("next possible words: ",
-    #       predictCompletions(seq, model, uniqueWords, uniqueWordsIndex, numPrevWords, numSuggestions))
+        print(len(suggestions) + 1, ": End Sentence")
+        print(len(suggestions) + 2, ": Enter custom word")
+        choice = int(input("Please enter number: "))
+        if choice == len(suggestions) + 1:
+            createdText = createdText + ". "
+            temp = createdText
+            createdText = ""
+            createdText = " " + str(input("Please enter the start of the new sentence: "))
+        elif choice == len(suggestions) + 2:
+            createdText = createdText + str(input("Enter Word: "))
+        elif choice > len(suggestions) + 2 or choice < -1:
+            print("Please enter a number between ", -1, "and", len(suggestions)+2)
+            continue
+        else:
+            createdText = createdText + " " + suggestions[choice]
 
 
 def getDataset(path):
@@ -81,7 +86,7 @@ def saveModelPrompt(model, history):
 
 def prepareWords(fileName, numPrevWords):
     # path = str(input("Please enter the file path of the input dataset: "))
-    path = 'holmes.txt'
+    path = 'Danger.txt'
     data = getDataset(path)
     uniqueWords = np.unique(data)
     uniqueWordsIndex = dict((c, i) for i, c in enumerate(uniqueWords))
@@ -156,7 +161,7 @@ def prepareInput(text, numPreviousWords, uniqueWords, uniqueWordsIndex):
     words.reverse()
     tmpText = ""
     for word in words:
-        tmpText += word + " "
+        tmpText += word.lower() + " "
 
     counter = 4
 
@@ -213,5 +218,5 @@ if __name__ == '__main__':
     os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
     import tensorflow as tf
 
-    with tf.device("/device:gpu:0"):
+    with tf.device("/device:cpu:0"):
         main()
