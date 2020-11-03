@@ -86,7 +86,7 @@ def saveModelPrompt(model, history):
 
 def prepareWords(fileName, numPrevWords):
     # path = str(input("Please enter the file path of the input dataset: "))
-    path = 'holmes.txt'
+    path = 'DANGER IN THE WHITE HOUSE.txt'
     data = getDataset(path)
     uniqueWords = np.unique(data)
     uniqueWordsIndex = dict((c, i) for i, c in enumerate(uniqueWords))
