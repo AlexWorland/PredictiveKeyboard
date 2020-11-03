@@ -15,6 +15,7 @@ from keras.layers.core import Dense, Activation
 from keras.optimizers import RMSprop
 import pickle
 import heapq
+import random as random
 
 
 # import matplotlib.pyplot as plt
@@ -41,6 +42,21 @@ def main():
         model, history, uniqueWords, uniqueWordsIndex = createNewModel(numPrevWords, optimizer, epochs)
         saveModelPrompt(model, history)
 
+    print("Select a mode:")
+    print("0 : Continuous")
+    print("1 : N words")
+    mode = int(input("Please enter a number:"))
+    if mode == 1:
+        length = int(input("Enter the length of words you would like to create: "))
+        createdText = str(input("Please enter the first word: "))
+        for i in range(length):
+            suggestions = predictCompletions(createdText, model, uniqueWords, uniqueWordsIndex, numPrevWords,
+                                             numSuggestions)
+
+            selection = random.randrange(0,numSuggestions,1)
+            createdText = createdText + " " + suggestions[selection]
+        print(createdText)
+        foo = 0
     createdText = str(input("Please enter the first word: "))
     choice = 0
     temp = ""
@@ -55,7 +71,7 @@ def main():
         print(len(suggestions) + 2, ": Enter custom word")
         choice = int(input("Please enter number: "))
         if choice == len(suggestions):
-            createdText = createdText + ". "
+            createdText = createdText + "."
             temp = createdText
             createdText = ""
             createdText = " " + str(input("Please enter the start of the new sentence: "))
@@ -115,7 +131,7 @@ def splitDataset(text):
     :param text: Input dataset
     :return: Returns a list of words
     """
-    tokenizer = RegexpTokenizer(r'\w+')
+    tokenizer = RegexpTokenizer(r'\w+[\.\,\?\;\:\'\"\!\?\(\)]?')
     words = tokenizer.tokenize(text)
     return words
 
@@ -169,7 +185,10 @@ def prepareInput(text, numPreviousWords, uniqueWords, uniqueWordsIndex):
         if counter < 0:
             break
         # print(word)
-        X[0, counter, uniqueWordsIndex[word]] = 1
+        if uniqueWordsIndex.__contains__(word):
+            X[0, counter, uniqueWordsIndex[word]] = 1
+        else:
+            continue
         counter -= 1
     return X
 
