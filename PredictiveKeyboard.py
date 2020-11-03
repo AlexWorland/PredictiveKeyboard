@@ -25,7 +25,7 @@ def main():
     # Constants
     numSuggestions = 5
     # TODO: make user specifiable
-    numPrevWords = 5
+    numPrevWords = 10
     epochs = 20
     optimizer = RMSprop(lr=0.01)
     createdText = ""
@@ -54,12 +54,13 @@ def main():
                                              numSuggestions)
 
             selection = random.randrange(0,numSuggestions,1)
-            createdText = createdText + " " + suggestions[selection]
+            createdText = createdText + " " + suggestions[i % numSuggestions]
         print(createdText)
         foo = 0
     createdText = str(input("Please enter the first word: "))
     choice = 0
     temp = ""
+    # TODO : add "more options" button
     while choice != -1:
         print(temp + createdText)
         suggestions = predictCompletions(createdText, model, uniqueWords, uniqueWordsIndex, numPrevWords,
