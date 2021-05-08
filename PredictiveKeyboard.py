@@ -25,7 +25,7 @@ def main():
     # Constants
     numSuggestions = 5
     # TODO: make user specifiable
-    numPrevWords = 40
+    numPrevWords = 10
     epochs = 20
     optimizer = RMSprop(lr=0.01)
     createdText = ""
@@ -203,6 +203,7 @@ def trainModel(model, X, Y, epochs):
     history = model.fit(X, Y, validation_split=0.05, batch_size=128, epochs=epochs, shuffle=True).history
     return model, history
 
+
 def saveModel(model, history, fileName, historyName):
     model.save(fileName)
     pickle.dump(history, open(historyName, "wb"))
@@ -239,9 +240,4 @@ if __name__ == '__main__':
     gpus = tf.config.experimental.list_physical_devices('GPU')
     for gpu in gpus:
         print("Name:", gpu.name, "  Type:", gpu.device_type)
-    mirroredStrategy = tf.distribute.MirroredStrategy()
-    multiworkerStrategy = tf.distribute.experimental.MultiWorkerMirroredStrategy()
-    centralStorageStrat = tf.distribute.experimental.CentralStorageStrategy()
-    # with multiworkerStrategy.scope():
-    #     main()
     main()
